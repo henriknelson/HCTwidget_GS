@@ -55,22 +55,24 @@ public class TimeWidget extends AppWidgetProvider {
         this.mCnTw = z;
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
-        // Since I cant get compiling against framework.jar working, I resorted to using reflection to get things up n' running!
+        boolean isUserKeyUnlocked = false;
+
+        // Use reflection to work with framework specific objects during runtime..
         try{
             Class userHandleClass = Class.forName("android.os.UserHandle");
-            Log.i("nu.cliffords.widgets","Loaded class: " + userHandleClass);
             Method getCallingUserIdMethod = userHandleClass.getDeclaredMethod("getCallingUserId",null);
-            Log.i("nu.cliffords.widgets","Got method: " + getCallingUserIdMethod);
-            Object resultObj = getCallingUserIdMethod.invoke(null, null);
-            int result = (int) resultObj;
-            Log.i("nu.cliffords.widgets","Result: " + result);
+            Object callingUserIdObj = getCallingUserIdMethod.invoke(null, null);
+            int callingUserId = (int) callingUserIdObj;
+            Class smClass = Class.forName("android.os.storage.StorageManager");
+            Method isUserKeyUnlockedMethod = smClass.getDeclaredMethod("isUserKeyUnlocked",int.class);
+            Object isUserKeyUnlockedObj = isUserKeyUnlockedMethod.invoke(null, callingUserId);
+            isUserKeyUnlocked = (boolean) isUserKeyUnlockedObj;
         }catch(Exception e)
         {
             Log.e("nu.cliffords.widgets","Error: " + e.getMessage());
         }
 
-        //if (StorageManager.isUserKeyUnlocked(UserHandle.getCallingUserId())) {
-        if (1 == 1) {
+        if(isUserKeyUnlocked) {
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(getComponentName(context));
             if (appWidgetManager != null) {
                 for (int appWidgetId : appWidgetIds) {
